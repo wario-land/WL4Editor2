@@ -92,7 +92,7 @@ namespace WL4EditorCore.Util
         /// Compress a single pass of data with RLE.
         /// rle8 and rle16 are tried. The one which compresses better is returned.
         /// </summary>
-        /// <param name="data">The data to compress</param>
+        /// <param name="data">The data to compress.</param>
         /// <returns>The compressed data</returns>
         public static byte[] RLECompress(byte[] data)
         {
