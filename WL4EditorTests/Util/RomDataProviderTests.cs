@@ -1,5 +1,5 @@
 ﻿using System.Collections.Immutable;
-using WL4EditorCore.Util;
+using WL4EditorCore;
 
 namespace WL4EditorTests.Util
 {

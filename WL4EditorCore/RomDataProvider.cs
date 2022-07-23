@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using WL4EditorCore.Interfaces.Util;
 
-namespace WL4EditorCore.Util
+namespace WL4EditorCore
 {
     public class RomDataProvider : IRomDataProvider
     {

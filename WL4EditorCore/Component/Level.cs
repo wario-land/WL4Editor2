@@ -1,13 +1,138 @@
-﻿using WL4EditorCore.Interfaces.Component;
+﻿using System.Text;
+using WL4EditorCore.Exception;
+using WL4EditorCore.Interfaces.Component;
+using WL4EditorCore.Util;
+using static WL4EditorCore.Util.Constants;
 
 namespace WL4EditorCore.Component
 {
     public class Level : ILevel
     {
-        public uint LevelID;
-        public string? LevelNameEN;
-        public string? LevelNameJP;
-        public IList<IRoom>? Rooms;
-        public IList<IDoor>? Doors;
+        public Passage Passage { get; private set; }
+        public Stage Stage { get; private set; }
+        public uint LevelID { get; private set; }
+        public string? LevelNameEN { get; private set; }
+        public string? LevelNameJP { get; private set; }
+        public uint HardTimerSeconds { get; private set; }
+        public uint NormalTimerSeconds { get; private set; }
+        public uint SuperHardTimerSeconds { get; private set; }
+        public IList<IRoom> Rooms { get; private set; } = new List<IRoom>();
+        public IList<IDoor> Doors { get; private set; } = new List<IDoor>();
+
+        /// <summary>
+        /// Construct a level object from specified passage and stage.
+        /// </summary>
+        /// <param name="passage">The passage from which to construct a level.</param>
+        /// <param name="stage">The stage from which to construct a level.</param>
+        /// <returns>The Level object.</returns>
+        /// <exception cref="ArgumentOutOfRangeException">If the passage or stage are outside the range of possible values.</exception>
+        /// <exception cref="ArgumentException">If the passage and stage are within valid range, but their combination references an invalid stage.</exception>
+        public Level(Passage passage, Stage stage)
+        {
+            ValidatePassageAndStage(passage, stage);
+            this.Passage = passage;
+            this.Stage = stage;
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.<ctor>)");
+
+            var offset = (uint)passage * 24 + (uint)stage * 4;
+            int levelHeaderIndex = (int)GBAUtils.GetIntValue(LevelHeaderIndexTable + (uint)passage * 24 + (uint)stage * 4);
+            int levelHeaderPointer = LevelHeaderTable + levelHeaderIndex * 12;
+
+            this.LevelID = data[levelHeaderPointer];
+            InitializeLevelNames(passage, stage);
+            InitializeLevelTimers(levelHeaderPointer);
+            InitializeDoors(levelHeaderPointer);
+            InitializeRooms(levelHeaderPointer);
+        }
+
+        private void ValidatePassageAndStage(Passage passage, Stage stage)
+        {
+            if (passage < 0 || ((int)passage) >= Enum.GetNames(typeof(Passage)).Length)
+            {
+                throw new ArgumentOutOfRangeException($"Passage out of range: {passage}");
+            }
+            var tt = Enum.GetNames(typeof(Stage));
+            if (stage < 0 || ((int)stage) >= Enum.GetNames(typeof(Stage)).Length)
+            {
+                throw new ArgumentOutOfRangeException($"Stage out of range: {stage}");
+            }
+            bool[][] _valid = new bool[][]
+            {
+                new bool[] { true, false, true , false, true },
+                new bool[] { true, true , true , true , true },
+                new bool[] { true, true , true , true , true },
+                new bool[] { true, true , true , true , true },
+                new bool[] { true, true , true , true , true },
+                new bool[] { true, false, false, false, true }
+            };
+            if (!_valid[(int)passage][(int)stage])
+            {
+                throw new ArgumentException($"Invalid passage/stage selection. Passage: {passage} Stage: {stage}");
+            }
+        }
+
+        private void InitializeLevelNames(Passage passage, Stage stage)
+        {
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelNames)");
+            string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.&あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ'、。—~…!?()「」『』[]℃-";
+            Func<uint, string> GetLevelName = (offset) =>
+            {
+                StringBuilder sb = new();
+                for (int i = 0; i < 26; ++i)
+                {
+                    var c = data[(int)offset + i];
+                    sb.Append(c < chars.Length ? chars[c] : ' ');
+                }
+                return sb.ToString().Trim();
+            };
+            var offsetEN = GBAUtils.GetPointer(LevelNameENPointerTable + (uint)passage * 24 + (uint)stage * 4);
+            this.LevelNameEN = GetLevelName(offsetEN);
+            var offsetJP = GBAUtils.GetPointer(LevelNameJPPointerTable + (uint)passage * 24 + (uint)stage * 4);
+            this.LevelNameJP = GetLevelName(offsetJP);
+        }
+
+        private void InitializeLevelTimers(int levelHeaderPointer)
+        {
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelTimers)");
+            Func<int, uint> GetTimerSeconds = (offset) =>
+            {
+                var a = data[offset];
+                var b = data[offset + 1];
+                var c = data[offset + 2];
+                return (uint)(a * 60 + b * 10 + c);
+            };
+            this.HardTimerSeconds = GetTimerSeconds(levelHeaderPointer + 3);
+            this.NormalTimerSeconds = GetTimerSeconds(levelHeaderPointer + 6);
+            this.SuperHardTimerSeconds = GetTimerSeconds(levelHeaderPointer + 9);
+        }
+
+        private void InitializeDoors(int levelHeaderPointer)
+        {
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeDoors)");
+            var doorStartAddress = (int)GBAUtils.GetPointer(DoorTable + this.LevelID * 4);
+            var currentDoorIndex = 0;
+            int doorPointer;
+            while (data[doorPointer = doorStartAddress + currentDoorIndex * 12] != 0)
+            {
+                this.Doors.Add(Singleton.Instance.DoorFactory.CreateDoor((uint)doorPointer));
+                ++currentDoorIndex;
+            }
+            if(currentDoorIndex == 0)
+            {
+                throw new DataException($"Level ({Passage}, {Stage}) has bad Door data (0 doors)");
+            }
+        }
+
+        private void InitializeRooms(int levelHeaderPointer)
+        {
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelTimers)");
+            int roomCount = data[levelHeaderPointer + 1];
+            var roomTableAddress = GBAUtils.GetPointer(RoomDataTable + this.LevelID * 4);
+            for (uint i = 0; i < roomCount; ++i)
+            {
+                uint roomDataAddress = roomTableAddress + i * 0x2C;
+                this.Rooms.Add(Singleton.Instance.RoomFactory.CreateRoom(roomDataAddress));
+            }
+        }
     }
 }

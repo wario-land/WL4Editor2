@@ -11,7 +11,6 @@ namespace WL4EditorTests
     public class TestBase
     {
         protected const string TestDataDirectory = "..\\..\\..\\TestData";
-        protected delegate void ThreadedTestCallback(ThreadedTestResult result);
         protected static readonly MockSingleton Mocks = new();
         protected static readonly Mutex TestClassSynchronizationLock = new();
 
@@ -19,14 +18,6 @@ namespace WL4EditorTests
         public static void AssemblyInit(TestContext tc)
         {
             Singleton.InitSingleton(Mocks);
-        }
-
-        protected class ThreadedTestResult
-        {
-            public object? Data = null;
-            public bool Success = false;
-            public string? FailureMessage = null;
-            public ThreadedTestCallback Callback = (_) => { };
         }
 
         protected class MockSingleton : ISingleton
@@ -66,6 +57,6 @@ namespace WL4EditorTests
                 result[i] = byte.Parse(input.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
             }
             return result;
-        }        
+        }
     }
 }
