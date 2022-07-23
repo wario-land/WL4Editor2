@@ -1,6 +1,6 @@
 ﻿using WL4EditorCore.Util;
-using System.Text.RegularExpressions;
 using WL4EditorCore.Exception;
+using System.Collections.Immutable;
 
 namespace WL4EditorTests.Util
 {
@@ -9,6 +9,20 @@ namespace WL4EditorTests.Util
     {
         private static string CompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Compressed";
         private static string DecompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Decompressed";
+
+        [TestInitialize]
+        [Description("Tests must synchronize since Singleton is modified")]
+        public void TestInit()
+        {
+            TestClassSynchronizationLock.WaitOne();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Mocks.MockRomDataProvider.Invocations.Clear();
+            TestClassSynchronizationLock.ReleaseMutex();
+        }
 
         [TestMethod]
         [Description("Test minimal valid cases for RLE decompression")]
@@ -21,18 +35,19 @@ namespace WL4EditorTests.Util
         {
             var input = StringToByteArray(inputStr);
             var expected = StringToByteArray(expectedStr);
-            var actual = Compression.RLEDecompress(input, offset);
+            Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(input));
+            var actual = Compression.RLEDecompress(offset);
             CollectionAssert.AreEqual(expected, actual);
         }
 
         [TestMethod]
+        //[Timeout(30000)]
         [Description("Test decompression on hundreds of compressed data files. Depends on correctness of Test_RLEDecompress_Valid")]
         public void Test_RLEDecompress_Valid_LargeTest()
         {
             var filenames = Directory.EnumerateFiles(CompressedDataDirectory).Select((fullPath) => Path.GetFileName(fullPath));
-            RunThreadedTests((result) =>
+            foreach(var fileName in filenames)
             {
-                var fileName = result.Data as string;
                 string inputDataFile = $"{CompressedDataDirectory}\\{fileName}";
                 string expectedDataFile = $"{DecompressedDataDirectory}\\{fileName}";
                 if (!File.Exists(inputDataFile))
@@ -44,21 +59,21 @@ namespace WL4EditorTests.Util
                     throw new Exception("Testing exception: Decompressed data file not found - " + expectedDataFile);
                 }
                 var inputData = File.ReadAllBytes(inputDataFile);
-                var actualData = Compression.RLEDecompress(inputData, 0);
+                Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(inputData));
+                var actualData = Compression.RLEDecompress(0);
                 var expectedData = File.ReadAllBytes(expectedDataFile);
                 CollectionAssert.AreEqual(expectedData, actualData);
-                result.Success = true;
-            }, filenames);
+            }
         }
 
         [TestMethod]
+        [Timeout(30000)]
         [Description("Test compression and decompression on hundreds of compressed data files. Depends on correctness of Test_RLEDecompress_Valid_LargeTest")]
         public void Test_RLECompress_Valid_LargeTest()
         {
             var filenames = Directory.EnumerateFiles(CompressedDataDirectory).Select((fullPath) => Path.GetFileName(fullPath));
-            RunThreadedTests((result) =>
+            foreach(var fileName in filenames)
             {
-                var fileName = result.Data as string;
                 string inputDataFile = $"{DecompressedDataDirectory}\\{fileName}";
                 if (!File.Exists(inputDataFile))
                 {
@@ -83,10 +98,10 @@ namespace WL4EditorTests.Util
 
                 // Coalesce compressed data together, then decompress it to validate
                 cUpper.AddRange(cLower);
-                var actualData = Compression.RLEDecompress(cUpper.ToArray(), 0);
+                Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(cUpper.ToArray()));
+                var actualData = Compression.RLEDecompress(0);
                 CollectionAssert.AreEqual(inputData, actualData);
-                result.Success = true;
-            }, filenames);
+            }
         }
 
         [TestMethod]
@@ -97,7 +112,8 @@ namespace WL4EditorTests.Util
         public void Test_RLEDecompress_Invalid_EndOfData(string inputStr)
         {
             var input = StringToByteArray(inputStr);
-            Compression.RLEDecompress(input, 0);
+            Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(input));
+            Compression.RLEDecompress(0);
         }
 
         [TestMethod]
@@ -107,23 +123,8 @@ namespace WL4EditorTests.Util
         public void Test_RLEDecompress_Invalid_SizeMismatch(string inputStr)
         {
             var input = StringToByteArray(inputStr);
-            Compression.RLEDecompress(input, 0);
-        }
-
-        private static byte[] StringToByteArray(string input)
-        {
-            input = input.Replace(" ", string.Empty);
-            var pattern = "^([0-9A-F]{2})*$";
-            if (!Regex.IsMatch(input, pattern))
-            {
-                throw new Exception($"Incorrectly formatted test. Test data does not match pattern {pattern}");
-            }
-            var result = new byte[input.Length / 2];
-            for(int i = 0; i < input.Length / 2; ++i)
-            {
-                result[i] = byte.Parse(input.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
-            }
-            return result;
+            Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(input));
+            Compression.RLEDecompress(0);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace WL4EditorCore.Factory.Component
 {
-    public class RoomFactory : IRoomFactory
+    public class DoorFactory : IDoorFactory
     {
 
     }

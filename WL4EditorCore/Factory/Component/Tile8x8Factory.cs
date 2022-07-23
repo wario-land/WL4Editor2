@@ -1,4 +1,4 @@
-﻿using WL4EditorCore.Factory.Interfaces;
+﻿using WL4EditorCore.Interfaces.Factory;
 
 namespace WL4EditorCore.Factory.Component
 {

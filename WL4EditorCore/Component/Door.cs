@@ -2,7 +2,7 @@
 
 namespace WL4EditorCore.Component
 {
-    public class Map16Tile : IMap16Tile
+    public class Door : IDoor
     {
 
     }
