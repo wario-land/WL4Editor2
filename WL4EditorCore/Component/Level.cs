@@ -19,6 +19,9 @@ namespace WL4EditorCore.Component
         public IList<IRoom> Rooms { get; private set; } = new List<IRoom>();
         public IList<IDoor> Doors { get; private set; } = new List<IDoor>();
 
+        // Text data used in conversion between strings and the data format used by WL4
+        private readonly string _textData = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.&あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ'、。—~…!?()「」『』[]℃-";
+
         /// <summary>
         /// Construct a level object from specified passage and stage.
         /// </summary>
@@ -74,14 +77,13 @@ namespace WL4EditorCore.Component
         private void InitializeLevelNames(Passage passage, Stage stage)
         {
             var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelNames)");
-            string chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.&あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんぁぃぅぇぉゃゅょっがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンァィゥェォャュョッガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポヴ'、。—~…!?()「」『』[]℃-";
             Func<uint, string> GetLevelName = (offset) =>
             {
                 StringBuilder sb = new();
                 for (int i = 0; i < 26; ++i)
                 {
                     var c = data[(int)offset + i];
-                    sb.Append(c < chars.Length ? chars[c] : ' ');
+                    sb.Append(c < _textData.Length ? _textData[c] : ' ');
                 }
                 return sb.ToString().Trim();
             };
