@@ -1,86 +1,71 @@
-﻿namespace WL4EditorTests
+﻿using Moq;
+using System.Text.RegularExpressions;
+using WL4EditorCore;
+using WL4EditorCore.Interfaces;
+using WL4EditorCore.Interfaces.Factory;
+using WL4EditorCore.Interfaces.Util;
+
+namespace WL4EditorTests
 {
+    [TestClass]
     public class TestBase
     {
-        protected static string TestDataDirectory = "..\\..\\..\\TestData";
+        protected const string TestDataDirectory = "..\\..\\..\\TestData";
         protected delegate void ThreadedTestCallback(ThreadedTestResult result);
+        protected static readonly MockSingleton Mocks = new();
+        protected static readonly Mutex TestClassSynchronizationLock = new();
+
+        [AssemblyInitialize]
+        public static void AssemblyInit(TestContext tc)
+        {
+            Singleton.InitSingleton(Mocks);
+        }
 
         protected class ThreadedTestResult
         {
-            public object Data = null;
+            public object? Data = null;
             public bool Success = false;
-            public string FailureMessage = null;
+            public string? FailureMessage = null;
             public ThreadedTestCallback Callback = (_) => { };
         }
 
-        protected static void RunThreadedTests(ThreadedTestCallback callback, IEnumerable<object> dataList)
+        protected class MockSingleton : ISingleton
         {
-            var mutex = new Mutex();
-            var runningThreads = dataList.Count();
-            var testResults = new List<ThreadedTestResult>();
+            public Mock<ILayerFactory> MockLayerFactory = new();
+            public Mock<IDoorFactory> MockDoorFactory = new();
+            public Mock<ILevelFactory> MockLevelFactory = new();
+            public Mock<IMap16TileFactory> MockMap16TileFactory = new();
+            public Mock<IRomDataProvider> MockRomDataProvider = new();
+            public Mock<IRoomFactory> MockRoomFactory = new();
+            public Mock<ITile8x8Factory> MockTile8x8Factory = new();
+            public IDoorFactory DoorFactory { get => MockDoorFactory.Object; }
+            public ILayerFactory LayerFactory { get => MockLayerFactory.Object; }
 
-            // Queue test threads
-            foreach (var data in dataList)
-            {
-                var testResult = new ThreadedTestResult
-                {
-                    Data = data,
-                    Callback = callback
-                };
-                testResults.Add(testResult);
-                ThreadPool.QueueUserWorkItem((o) =>
-                {
-                    var testResult = o as ThreadedTestResult ?? throw new Exception("Internal testing exception: ThreadedTestResult object null");
-                    try
-                    {
-                        testResult.Callback(testResult);
-                    }
-                    catch (Exception e)
-                    {
-                        testResult.FailureMessage = e.Message;
-                        testResult.Success = false;
-                    }
-                    mutex.WaitOne();
-                    {
-                        --runningThreads;
-                    }
-                    mutex.ReleaseMutex();
-                }, testResult);
-            }
+            public ILevelFactory LevelFactory { get => MockLevelFactory.Object; }
 
-            // Set a timeout timer in case a test gets stuck
-            bool termination = false;
-            Timer timeout = new Timer((_) =>
-            {
-                mutex.WaitOne();
-                {
-                    termination = true;
-                }
-                mutex.ReleaseMutex();
-            }, null, 30 * 1000, Timeout.Infinite);
+            public IMap16TileFactory Map16TileFactory { get => MockMap16TileFactory.Object; }
 
-            // Wait for threads to complete
-            while(true)
-            {
-                Thread.Yield();
-                mutex.WaitOne();
-                {
-                    if(runningThreads == 0)
-                    {
-                        break;
-                    }
-                    else if(termination)
-                    {
-                        throw new Exception($"Multithreaded test with {dataList.Count()} threads timed out ({runningThreads} threads still active)");
-                    }
-                }
-                mutex.ReleaseMutex();
-            }
+            public IRomDataProvider RomDataProvider { get => MockRomDataProvider.Object; }
 
-            // Aggregate results
-            var failures = testResults.Count((t) => !t.Success);
-            var tr = testResults.FirstOrDefault((t) => !t.Success);
-            Assert.AreEqual(0, failures, $"{failures}/{dataList.Count()} threads resulted in test failure. One such failure: {tr?.FailureMessage} (data: {tr?.Data})");
+            public IRoomFactory RoomFactory { get => MockRoomFactory.Object; }
+
+            public ITile8x8Factory Tile8x8Factory { get => MockTile8x8Factory.Object; }
         }
+
+        protected static byte[] StringToByteArray(string input)
+        {
+            input = input.Replace(" ", string.Empty);
+            var pattern = "^([0-9A-F]{2})*$";
+            if (!Regex.IsMatch(input, pattern))
+            {
+                throw new Exception($"Incorrectly formatted test. Test data does not match pattern {pattern}");
+            }
+            var result = new byte[input.Length / 2];
+            for (int i = 0; i < input.Length / 2; ++i)
+            {
+                result[i] = byte.Parse(input.Substring(i * 2, 2), System.Globalization.NumberStyles.HexNumber);
+            }
+            return result;
+        }        
     }
 }

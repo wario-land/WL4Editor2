@@ -1,11 +1,27 @@
+using System.Collections.Immutable;
 using WL4EditorCore.Util;
 
 namespace WL4EditorTests.Util
 {
     [TestClass]
-    public class GBAUtilsTests
+    public class GBAUtilsTests : TestBase
     {
-        private static byte[] TestData = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
+        private static readonly byte[] TestData = StringToByteArray("0001020304050607");
+
+        [TestInitialize]
+        [Description("Tests must synchronize since Singleton is modified")]
+        public void TestInit()
+        {
+            TestClassSynchronizationLock.WaitOne();
+            Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(TestData));
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Mocks.MockRomDataProvider.Invocations.Clear();
+            TestClassSynchronizationLock.ReleaseMutex();
+        }
 
         [TestMethod]
         [DataRow(0u, 0x0001u)]
@@ -17,7 +33,7 @@ namespace WL4EditorTests.Util
         [DataRow(6u, 0x0607u)]
         public void Test_GetShortValue_Valid(uint offset, uint expected)
         {
-            var actual = GBAUtils.GetShortValue(TestData, offset);
+            var actual = GBAUtils.GetShortValue(offset);
             Assert.AreEqual(expected, actual);
         }
 
@@ -29,24 +45,16 @@ namespace WL4EditorTests.Util
         [DataRow(4u, 0x04050607u)]
         public void Test_GetIntValue_Valid(uint offset, uint expected)
         {
-            var actual = GBAUtils.GetIntValue(TestData, offset);
+            var actual = GBAUtils.GetIntValue(offset);
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Test_GetShortValue_Invalid_NullData() => GBAUtils.GetShortValue(null, 0);
+        [ExpectedException(typeof(IndexOutOfRangeException))]
+        public void Test_GetShortValue_Invalid_OffsetOOB() => GBAUtils.GetShortValue(7);
 
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void Test_GetShortValue_Invalid_OffsetOOB() => GBAUtils.GetShortValue(TestData, 7);
-
-        [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
-        public void Test_GetIntValue_Invalid_NullData() => GBAUtils.GetIntValue(null, 0);
-
-        [TestMethod]
-        [ExpectedException(typeof(IndexOutOfRangeException))]
-        public void Test_GetIntValue_Invalid_OffsetOOB() => GBAUtils.GetIntValue(TestData, 5);
+        public void Test_GetIntValue_Invalid_OffsetOOB() => GBAUtils.GetIntValue(5);
     }
 }

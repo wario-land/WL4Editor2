@@ -12,11 +12,10 @@ namespace WL4EditorCore.Util
         /// Decompress RLE data in WL4's format
         /// Data is compressed in 2 sequential regions in either RL8 or RLe16 format, and interleaved into the high and low bytes of shorts in the output.
         /// </summary>
-        /// <param name="data">The data from which decompression will be performed.</param>
         /// <param name="offset">The offset into data which marks the start of decompression.</param>
         /// <returns>The decompressed data as a byte array.</returns>
         /// <exception cref="DataException">If the end of data is reached while performing an RLE pass, or if the upper and lower portions do not match in size.</exception>
-        public static byte[] RLEDecompress(byte[] data, uint offset)
+        public static byte[] RLEDecompress(uint offset)
         {
             List<byte> upper, lower;
 
@@ -24,8 +23,8 @@ namespace WL4EditorCore.Util
             try
             {
                 var address = offset;
-                upper = RLEDecompressSinglePass(data, ref address);
-                lower = RLEDecompressSinglePass(data, ref address);
+                upper = RLEDecompressSinglePass(ref address);
+                lower = RLEDecompressSinglePass(ref address);
             }
             catch (IndexOutOfRangeException)
             {
@@ -47,14 +46,20 @@ namespace WL4EditorCore.Util
         }
 
         // Decompress a single pass of data. 2 passes must be interleaved to construct the output.
-        private static List<byte> RLEDecompressSinglePass(byte[] data, ref uint offset)
+        private static List<byte> RLEDecompressSinglePass(ref uint offset)
         {
-            List<byte> outputData = new List<byte>();
+            if (Singleton.Instance == null)
+            {
+                throw new InternalException("Singleton not initialized (WL4EditorCore.Util.RLEDecompressSinglePass)");
+            }
+            var data = Singleton.Instance.RomDataProvider.Data();
+
+            List<byte> outputData = new();
             uint runData;
-            var rle8 = data[offset++] == 1;
+            var rle8 = data[(int)offset++] == 1;
             while (true)
             {
-                uint ctrl = rle8 ? data[offset] : GBAUtils.GetShortValue(data, offset);
+                uint ctrl = rle8 ? data[(int)offset] : GBAUtils.GetShortValue(offset);
                 offset += rle8 ? 1u : 2;
                 uint ctrlMask = rle8 ? 0x80u : 0x8000;
                 if (ctrl == 0)
@@ -68,7 +73,7 @@ namespace WL4EditorCore.Util
                     runData = ctrl & (ctrlMask - 1);
                     for (int j = 0; j < runData; j++)
                     {
-                        outputData.Add(data[offset]);
+                        outputData.Add(data[(int)offset]);
                     }
                     offset++;
                 }
@@ -78,7 +83,7 @@ namespace WL4EditorCore.Util
                     runData = ctrl;
                     for (int j = 0; j < runData; j++)
                     {
-                        outputData.Add(data[offset + j]);
+                        outputData.Add(data[(int)offset + j]);
                     }
                     offset += runData;
                 }

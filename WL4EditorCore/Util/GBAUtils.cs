@@ -10,26 +10,30 @@ namespace WL4EditorCore.Util
         /// <summary>
         /// Get a little-endian int value (4 bytes) from data
         /// </summary>
-        /// <param name="data">The data from which to get an int</param>
         /// <param name="offset">The offset in data where to start reading the int</param>
         /// <returns>The int value</returns>
         /// <exception cref="ArgumentNullException">If data is null</exception>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the int being read is out of bounds of the data</exception>
-        public static uint GetIntValue(byte[] data, uint offset) => GetValueHelper(data, offset, 4);
+        public static uint GetIntValue(uint offset) => GetValueHelper(offset, 4);
 
         /// <summary>
         /// Get a little-endian short value (2 bytes) from data
         /// </summary>
-        /// <param name="data">The data from which to get a short</param>
         /// <param name="offset">The offset in data where to start reading the short</param>
         /// <returns>The short value</returns>
         /// <exception cref="ArgumentNullException">If data is null</exception>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the short being read is out of bounds of the data</exception>
-        public static ushort GetShortValue(byte[] data, uint offset) => (ushort) GetValueHelper(data, offset, 2);
+        public static ushort GetShortValue(uint offset) => (ushort) GetValueHelper(offset, 2);
 
         // Get a little-endian value of specified size from data
-        private static uint GetValueHelper(byte[] data, uint offset, int size)
+        private static uint GetValueHelper(uint offset, int size)
         {
+            if(Singleton.Instance == null)
+            {
+                throw new InternalException("Singleton not initialized (WL4EditorCore.Util.GetValueHelper)");
+            }
+            var data = Singleton.Instance.RomDataProvider.Data();
+
             // Verify that parameters are valid
             if (size != 2 && size != 4)
             {
@@ -48,7 +52,7 @@ namespace WL4EditorCore.Util
             uint ret = 0;
             for (int i = 0; i < size; ++i)
             {
-                ret |= (uint) data[offset + size - i - 1] << (i * 8);
+                ret |= (uint) data[(int)(offset + size - i - 1)] << (i * 8);
             }
             return ret;
         }
