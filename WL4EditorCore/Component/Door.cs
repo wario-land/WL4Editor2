@@ -4,6 +4,6 @@ namespace WL4EditorCore.Component
 {
     public class Door : IDoor
     {
-
+        
     }
 }

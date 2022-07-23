@@ -12,16 +12,22 @@ namespace WL4EditorCore.Util
         /// </summary>
         /// <param name="offset">The offset in data where to start reading the int</param>
         /// <returns>The int value</returns>
-        /// <exception cref="ArgumentNullException">If data is null</exception>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the int being read is out of bounds of the data</exception>
         public static uint GetIntValue(uint offset) => GetValueHelper(offset, 4);
+
+        /// <summary>
+        /// Get a 4-byte pointer value from data. It is converted to a 0-based offset.
+        /// </summary>
+        /// <param name="offset">The offset in data where to start reading the pointer</param>
+        /// <returns>The pointer value</returns>
+        /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the pointer being read is out of bounds of the data</exception>
+        public static uint GetPointer(uint offset) => GetIntValue(offset) & 0x7FFFFFFu;
 
         /// <summary>
         /// Get a little-endian short value (2 bytes) from data
         /// </summary>
         /// <param name="offset">The offset in data where to start reading the short</param>
         /// <returns>The short value</returns>
-        /// <exception cref="ArgumentNullException">If data is null</exception>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the short being read is out of bounds of the data</exception>
         public static ushort GetShortValue(uint offset) => (ushort) GetValueHelper(offset, 2);
 
@@ -39,13 +45,9 @@ namespace WL4EditorCore.Util
             {
                 throw new InternalException($"Invalid size: {size} (must be 2 or 4)");
             }
-            if (data == null)
-            {
-                throw new ArgumentNullException("data");
-            }
             if (offset + size > data.Length)
             {
-                throw new IndexOutOfRangeException($"offset {offset} plus type length ({size}) out of range for data (length {data.Length})");
+                throw new IndexOutOfRangeException($"offset {offset} plus type length ({size}) out of range for ROM data (length {data.Length})");
             }
 
             // Get the value
