@@ -13,7 +13,7 @@ namespace WL4EditorCore.Util
         /// <param name="offset">The offset in data where to start reading the int</param>
         /// <returns>The int value</returns>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the int being read is out of bounds of the data</exception>
-        public static uint GetIntValue(uint offset) => GetValueHelper(offset, 4);
+        public static uint GetIntValue(int offset) => GetValueHelper(offset, 4);
 
         /// <summary>
         /// Get a 4-byte pointer value from data. It is converted to a 0-based offset.
@@ -21,7 +21,7 @@ namespace WL4EditorCore.Util
         /// <param name="offset">The offset in data where to start reading the pointer</param>
         /// <returns>The pointer value</returns>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the pointer being read is out of bounds of the data</exception>
-        public static uint GetPointer(uint offset) => GetIntValue(offset) & 0x7FFFFFFu;
+        public static int GetPointer(int offset) => (int)GetIntValue(offset) & 0x7FFFFFF;
 
         /// <summary>
         /// Get a little-endian short value (2 bytes) from data
@@ -29,10 +29,10 @@ namespace WL4EditorCore.Util
         /// <param name="offset">The offset in data where to start reading the short</param>
         /// <returns>The short value</returns>
         /// <exception cref="ArgumentOutOfRangeException">If the offset or part of the short being read is out of bounds of the data</exception>
-        public static ushort GetShortValue(uint offset) => (ushort) GetValueHelper(offset, 2);
+        public static ushort GetShortValue(int offset) => (ushort) GetValueHelper(offset, 2);
 
         // Get a little-endian value of specified size from data
-        private static uint GetValueHelper(uint offset, int size)
+        private static uint GetValueHelper(int offset, int size)
         {
             if(Singleton.Instance == null)
             {
@@ -54,7 +54,7 @@ namespace WL4EditorCore.Util
             uint ret = 0;
             for (int i = 0; i < size; ++i)
             {
-                ret |= (uint) data[(int)(offset + size - i - 1)] << (i * 8);
+                ret |= (uint) data[offset + size - i - 1] << (i * 8);
             }
             return ret;
         }

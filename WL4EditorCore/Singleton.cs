@@ -2,7 +2,6 @@
 using WL4EditorCore.Interfaces;
 using WL4EditorCore.Interfaces.Factory;
 using WL4EditorCore.Interfaces.Util;
-using WL4EditorCore.Util;
 
 namespace WL4EditorCore
 {
@@ -28,6 +27,7 @@ namespace WL4EditorCore
             public IRomDataProvider RomDataProvider { get; } = new RomDataProvider();
             public IRoomFactory RoomFactory { get; } = new RoomFactory();
             public ITile8x8Factory Tile8x8Factory { get; } = new Tile8x8Factory();
+            public ITilesetFactory TilesetFactory { get; } = new TilesetFactory();
         }
     }
 }

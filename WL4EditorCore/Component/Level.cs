@@ -37,25 +37,23 @@ namespace WL4EditorCore.Component
             this.Stage = stage;
             var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.<ctor>)");
 
-            var offset = (uint)passage * 24 + (uint)stage * 4;
-            int levelHeaderIndex = (int)GBAUtils.GetIntValue(LevelHeaderIndexTable + (uint)passage * 24 + (uint)stage * 4);
+            int levelHeaderIndex = (int)GBAUtils.GetIntValue(LevelHeaderIndexTable + (int)passage * 24 + (int)stage * 4);
             int levelHeaderPointer = LevelHeaderTable + levelHeaderIndex * 12;
 
             this.LevelID = data[levelHeaderPointer];
             InitializeLevelNames(passage, stage);
             InitializeLevelTimers(levelHeaderPointer);
-            InitializeDoors(levelHeaderPointer);
+            InitializeDoors();
             InitializeRooms(levelHeaderPointer);
         }
 
-        private void ValidatePassageAndStage(Passage passage, Stage stage)
+        private static void ValidatePassageAndStage(Passage passage, Stage stage)
         {
-            if (passage < 0 || ((int)passage) >= Enum.GetNames(typeof(Passage)).Length)
+            if (!Enum.IsDefined(passage))
             {
                 throw new ArgumentOutOfRangeException($"Passage out of range: {passage}");
             }
-            var tt = Enum.GetNames(typeof(Stage));
-            if (stage < 0 || ((int)stage) >= Enum.GetNames(typeof(Stage)).Length)
+            if (!Enum.IsDefined(stage))
             {
                 throw new ArgumentOutOfRangeException($"Stage out of range: {stage}");
             }
@@ -77,19 +75,19 @@ namespace WL4EditorCore.Component
         private void InitializeLevelNames(Passage passage, Stage stage)
         {
             var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelNames)");
-            Func<uint, string> GetLevelName = (offset) =>
+            Func<int, string> GetLevelName = (offset) =>
             {
                 StringBuilder sb = new();
                 for (int i = 0; i < 26; ++i)
                 {
-                    var c = data[(int)offset + i];
+                    var c = data[offset + i];
                     sb.Append(c < _textData.Length ? _textData[c] : ' ');
                 }
                 return sb.ToString().Trim();
             };
-            var offsetEN = GBAUtils.GetPointer(LevelNameENPointerTable + (uint)passage * 24 + (uint)stage * 4);
+            var offsetEN = GBAUtils.GetPointer(LevelNameENPointerTable + (int)passage * 24 + (int)stage * 4);
             this.LevelNameEN = GetLevelName(offsetEN);
-            var offsetJP = GBAUtils.GetPointer(LevelNameJPPointerTable + (uint)passage * 24 + (uint)stage * 4);
+            var offsetJP = GBAUtils.GetPointer(LevelNameJPPointerTable + (int)passage * 24 + (int)stage * 4);
             this.LevelNameJP = GetLevelName(offsetJP);
         }
 
@@ -108,15 +106,15 @@ namespace WL4EditorCore.Component
             this.SuperHardTimerSeconds = GetTimerSeconds(levelHeaderPointer + 9);
         }
 
-        private void InitializeDoors(int levelHeaderPointer)
+        private void InitializeDoors()
         {
             var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeDoors)");
-            var doorStartAddress = (int)GBAUtils.GetPointer(DoorTable + this.LevelID * 4);
+            var doorStartAddress = GBAUtils.GetPointer(DoorTable + (int)this.LevelID * 4);
             var currentDoorIndex = 0;
             int doorPointer;
             while (data[doorPointer = doorStartAddress + currentDoorIndex * 12] != 0)
             {
-                this.Doors.Add(Singleton.Instance.DoorFactory.CreateDoor((uint)doorPointer));
+                this.Doors.Add(Singleton.Instance.DoorFactory.CreateDoor(doorPointer));
                 ++currentDoorIndex;
             }
             if(currentDoorIndex == 0)
@@ -129,10 +127,10 @@ namespace WL4EditorCore.Component
         {
             var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Component.Level.InitializeLevelTimers)");
             int roomCount = data[levelHeaderPointer + 1];
-            var roomTableAddress = GBAUtils.GetPointer(RoomDataTable + this.LevelID * 4);
-            for (uint i = 0; i < roomCount; ++i)
+            var roomTableAddress = GBAUtils.GetPointer(RoomDataTable + (int)this.LevelID * 4);
+            for (int i = 0; i < roomCount; ++i)
             {
-                uint roomDataAddress = roomTableAddress + i * 0x2C;
+                int roomDataAddress = roomTableAddress + i * 0x2C;
                 this.Rooms.Add(Singleton.Instance.RoomFactory.CreateRoom(roomDataAddress));
             }
         }

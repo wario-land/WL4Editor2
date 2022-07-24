@@ -2,8 +2,8 @@
 
 namespace WL4EditorCore.Interfaces.Factory
 {
-    public interface IRoomFactory
+    public interface ITilesetFactory
     {
-        IRoom CreateRoom(int roomDataAddress);
+        ITileset CreateTileset(int index);
     }
 }

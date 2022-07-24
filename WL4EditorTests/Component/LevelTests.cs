@@ -16,8 +16,8 @@ namespace WL4EditorTests.Component
             TestClassSynchronizationLock.WaitOne();
             var testData = ImmutableArray.Create(TestData.ConstructTestLevelData());
             Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(testData);
-            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<uint>())).Returns(new Mock<IRoom>().Object);
-            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<uint>())).Returns(new Mock<IDoor>().Object);
+            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<int>())).Returns(new Mock<IRoom>().Object);
+            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<int>())).Returns(new Mock<IDoor>().Object);
         }
 
         [TestCleanup]

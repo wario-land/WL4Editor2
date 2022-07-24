@@ -29,6 +29,7 @@ namespace WL4EditorTests
             public Mock<IRomDataProvider> MockRomDataProvider = new();
             public Mock<IRoomFactory> MockRoomFactory = new();
             public Mock<ITile8x8Factory> MockTile8x8Factory = new();
+            public Mock<ITilesetFactory> MockTilesetFactory = new();
             public IDoorFactory DoorFactory { get => MockDoorFactory.Object; }
             public ILayerFactory LayerFactory { get => MockLayerFactory.Object; }
 
@@ -41,6 +42,7 @@ namespace WL4EditorTests
             public IRoomFactory RoomFactory { get => MockRoomFactory.Object; }
 
             public ITile8x8Factory Tile8x8Factory { get => MockTile8x8Factory.Object; }
+            public ITilesetFactory TilesetFactory { get => MockTilesetFactory.Object; }
         }
 
         protected static byte[] StringToByteArray(string input)
