@@ -7,6 +7,6 @@ namespace WL4EditorCore.Factory.Component
     public class RoomFactory : IRoomFactory
     {
         /// <inheritdoc />
-        public IRoom CreateRoom(int roomDataAddress) => new Room(roomDataAddress);
+        public IRoom CreateRoom(int roomDataAddress, int roomIndex, uint levelID) => new Room(roomDataAddress, roomIndex, levelID);
     }
 }

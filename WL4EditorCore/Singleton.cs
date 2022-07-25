@@ -28,6 +28,8 @@ namespace WL4EditorCore
             public IRoomFactory RoomFactory { get; } = new RoomFactory();
             public ITile8x8Factory Tile8x8Factory { get; } = new Tile8x8Factory();
             public ITilesetFactory TilesetFactory { get; } = new TilesetFactory();
+            public ICameraControlFactory CameraControlFactory { get; } = new CameraControlFactory();
+            public IEntitySetFactory EntitySetFactory { get; } = new EntitySetFactory();
         }
     }
 }

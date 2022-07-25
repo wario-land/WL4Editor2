@@ -9,15 +9,28 @@ namespace WL4EditorTests.Component
     [TestClass]
     public class LevelTests : TestBase
     {
+        private static ImmutableArray<byte> testData;
+        private IList<MethodInvocation> Invocations = new List<MethodInvocation>();
+
+        #region Test Setup
+        [ClassInitialize]
+        public static void ClassInit(TestContext tc)
+        {
+            testData = ImmutableArray.Create(TestData.ConstructTestLevelData());
+        }
+
         [TestInitialize]
         [Description("Tests must synchronize since Singleton is modified")]
         public void TestInit()
         {
             TestClassSynchronizationLock.WaitOne();
-            var testData = ImmutableArray.Create(TestData.ConstructTestLevelData());
             Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(testData);
-            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<int>())).Returns(new Mock<IRoom>().Object);
-            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<int>())).Returns(new Mock<IDoor>().Object);
+            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<uint>()))
+                .Callback<int, int, uint>((a, b, c) => Invocations.Add(new MethodInvocation("CreateRoom", a, b, c)))
+                .Returns(new Mock<IRoom>().Object);
+            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<int>()))
+                .Callback<int>(a => Invocations.Add(new MethodInvocation("CreateDoor", a)))
+                .Returns(new Mock<IDoor>().Object);
         }
 
         [TestCleanup]
@@ -28,7 +41,9 @@ namespace WL4EditorTests.Component
             Mocks.MockDoorFactory.Invocations.Clear();
             TestClassSynchronizationLock.ReleaseMutex();
         }
+        #endregion
 
+        #region Valid Tests
         [TestMethod]
         [DataRow(Passage.EntryPassage, Stage.FirstLevel)]
         [DataRow(Passage.TopazPassage, Stage.ThirdLevel)]
@@ -119,6 +134,38 @@ namespace WL4EditorTests.Component
             Assert.AreEqual(expected, level.Doors.Count);
         }
 
+        private static readonly MethodInvocation[][] CallbackData =
+        {
+            new MethodInvocation[]
+            {
+                new MethodInvocation("CreateDoor", 104),
+                new MethodInvocation("CreateRoom", 0, 0, 0u)
+            },
+            new MethodInvocation[]
+            {
+                new MethodInvocation("CreateDoor", 128),
+                new MethodInvocation("CreateDoor", 140),
+                new MethodInvocation("CreateDoor", 152),
+                new MethodInvocation("CreateRoom", 0, 0, 1u),
+                new MethodInvocation("CreateRoom", 44, 1, 1u),
+                new MethodInvocation("CreateRoom", 88, 2, 1u)
+            },
+        };
+
+        [TestMethod]
+        [DataRow(Passage.EntryPassage, Stage.FirstLevel, 0)]
+        [DataRow(Passage.TopazPassage, Stage.ThirdLevel, 1)]
+        public void Test_CreateLevel_Valid_Callbacks(Passage passage, Stage stage, int callbackDataIndex)
+        {
+            _ = new Level(passage, stage);
+            var expected = CallbackData[callbackDataIndex];
+            var actual = this.Invocations;
+            Assert.AreEqual(expected.Length, actual.Count);
+            Array.ForEach(expected, a => Assert.IsTrue(actual.Contains(a, a)));
+        }
+        #endregion
+
+        #region Invalid Tests
         [TestMethod]
         [Description("Test to make sure that exception is thrown if the passage or stage are out of range of their enums")]
         [ExpectedException(typeof(ArgumentOutOfRangeException))]
@@ -143,5 +190,6 @@ namespace WL4EditorTests.Component
         {
             new Level(passage, stage);
         }
+        #endregion
     }
 }

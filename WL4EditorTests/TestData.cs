@@ -7,7 +7,7 @@ namespace WL4EditorTests
         // Construct test ROM data that will load 2 levels
         public static byte[] ConstructTestLevelData()
         {
-            var data = new byte[RoomDataTable + 8];
+            var data = new byte[FreeSpaceStart];
 
             // Level (0, 0) - 1 room, 1 door
             var levelHeaderIndex1 = StringToByteArray("00000000");
@@ -59,6 +59,14 @@ namespace WL4EditorTests
         // Construct test ROM data that will load a room
         public static byte[] ConstructTestRoomData()
         {
+            var data = new byte[FreeSpaceStart];
+
+            // Room (0, 0, 0) - No camera control
+            // TODO
+
+            // Room (1, 1, 1) - 2 camera control boxes
+            // TODO
+
             throw new NotImplementedException();
         }
     }

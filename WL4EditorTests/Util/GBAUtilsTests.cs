@@ -8,6 +8,7 @@ namespace WL4EditorTests.Util
     {
         private static readonly byte[] TestData = StringToByteArray("8001020304050607");
 
+        #region Test Setup
         [TestInitialize]
         [Description("Tests must synchronize since Singleton is modified")]
         public void TestInit()
@@ -22,7 +23,9 @@ namespace WL4EditorTests.Util
             Mocks.MockRomDataProvider.Invocations.Clear();
             TestClassSynchronizationLock.ReleaseMutex();
         }
+        #endregion
 
+        #region Valid Tests
         [TestMethod]
         [DataRow(0, 0x8001u)]
         [DataRow(1, 0x0102u)]
@@ -56,7 +59,9 @@ namespace WL4EditorTests.Util
             var actual = GBAUtils.GetPointer(offset);
             Assert.AreEqual(expected, actual);
         }
+        #endregion
 
+        #region Invalid Tests
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void Test_GetShortValue_Invalid_OffsetOOB() => GBAUtils.GetShortValue(7);
@@ -64,5 +69,6 @@ namespace WL4EditorTests.Util
         [TestMethod]
         [ExpectedException(typeof(IndexOutOfRangeException))]
         public void Test_GetIntValue_Invalid_OffsetOOB() => GBAUtils.GetIntValue(5);
+        #endregion
     }
 }

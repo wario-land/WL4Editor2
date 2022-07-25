@@ -13,5 +13,7 @@ namespace WL4EditorCore.Interfaces
         IRoomFactory RoomFactory { get; }
         ITile8x8Factory Tile8x8Factory { get; }
         ITilesetFactory TilesetFactory { get; }
+        ICameraControlFactory CameraControlFactory { get; }
+        IEntitySetFactory EntitySetFactory { get; }
     }
 }

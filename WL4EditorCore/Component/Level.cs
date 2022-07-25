@@ -131,7 +131,7 @@ namespace WL4EditorCore.Component
             for (int i = 0; i < roomCount; ++i)
             {
                 int roomDataAddress = roomTableAddress + i * 0x2C;
-                this.Rooms.Add(Singleton.Instance.RoomFactory.CreateRoom(roomDataAddress));
+                this.Rooms.Add(Singleton.Instance.RoomFactory.CreateRoom(roomDataAddress, i, this.LevelID));
             }
         }
     }

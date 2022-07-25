@@ -10,6 +10,7 @@ namespace WL4EditorTests.Util
         private static string CompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Compressed";
         private static string DecompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Decompressed";
 
+        #region Test Setup
         [TestInitialize]
         [Description("Tests must synchronize since Singleton is modified")]
         public void TestInit()
@@ -23,7 +24,9 @@ namespace WL4EditorTests.Util
             Mocks.MockRomDataProvider.Invocations.Clear();
             TestClassSynchronizationLock.ReleaseMutex();
         }
+        #endregion
 
+        #region Valid Tests
         [TestMethod]
         [Description("Test minimal valid cases for RLE decompression")]
         [DataRow("01 03 AACCEE 00 01 03 BBDDFF 00", 0, "AABB CCDD EEFF")] // data run (RLE8)
@@ -103,7 +106,9 @@ namespace WL4EditorTests.Util
                 CollectionAssert.AreEqual(inputData, actualData);
             }
         }
+        #endregion
 
+        #region Invalid Tests
         [TestMethod]
         [Description("Test cases in which RLE decompression throws IndexOutOfRangeException")]
         [DataRow("")] // immediately hit the end of data
@@ -126,5 +131,6 @@ namespace WL4EditorTests.Util
             Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(input));
             Compression.RLEDecompress(0);
         }
+        #endregion
     }
 }
