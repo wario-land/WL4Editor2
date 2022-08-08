@@ -11,6 +11,6 @@ namespace WL4EditorCore.Interfaces.Factory
         /// <param name="passage">The passage from which to generate a level.</param>
         /// <param name="stage">The stage from which to generate a level.</param>
         /// <returns>The Level object.</returns>
-        public ILevel CreateLevel(Passage passage, Stage stage);
+        ILevel CreateLevel(Passage passage, Stage stage);
     }
 }

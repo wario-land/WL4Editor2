@@ -2,8 +2,8 @@
 
 namespace WL4EditorCore.Interfaces.Factory
 {
-    public interface IDoorFactory
+    public interface IEntitySetFactory
     {
-        IDoor CreateDoor(int doorDataAddress);
+        IEntitySet CreateEntitySet(int entitySetAddress);
     }
 }

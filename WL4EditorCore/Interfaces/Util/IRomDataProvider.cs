@@ -9,12 +9,12 @@ namespace WL4EditorCore.Interfaces.Util
         /// </summary>
         /// <param name="filePath">The file to read.</param>
         /// <exception cref="FileNotFoundException">If the file does not exist.</exception>
-        public void LoadDatafromFile(string filePath);
+        void LoadDatafromFile(string filePath);
 
         /// <summary>
         /// Get the ROM data as an immutable array.
         /// </summary>
         /// <returns>The ROM data.</returns>
-        public ImmutableArray<byte> Data();
+        ImmutableArray<byte> Data();
     }
 }

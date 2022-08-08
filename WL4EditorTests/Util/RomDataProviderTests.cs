@@ -8,6 +8,7 @@ namespace WL4EditorTests.Util
     {
         private static readonly RomDataProvider Provider = new();
 
+        #region Valid Tests
         [TestMethod]
         [Description("Test a simple case of reading a file and verifying its contents match the expected payload")]
         public void Test_Init_Valid()
@@ -17,7 +18,9 @@ namespace WL4EditorTests.Util
             Provider.LoadDatafromFile(dataFile);
             CollectionAssert.AreEqual(expected, Provider.Data());
         }
+        #endregion
 
+        #region Invalid Tests
         [TestMethod]
         [Description("Test to make sure that FileNotFoundException is thrown if the file does not exist")]
         [ExpectedException(typeof(FileNotFoundException))]
@@ -25,5 +28,6 @@ namespace WL4EditorTests.Util
         {
             Provider.LoadDatafromFile("gggggggggggg");
         }
+        #endregion
     }
 }

@@ -4,14 +4,14 @@ namespace WL4EditorCore.Interfaces.Component
 {
     public interface ILevel
     {
-        public Passage Passage { get; }
-        public Stage Stage { get; }
-        public string? LevelNameEN { get; }
-        public string? LevelNameJP { get; }
-        public uint HardTimerSeconds { get; }
-        public uint NormalTimerSeconds { get; }
-        public uint SuperHardTimerSeconds { get; }
-        public IList<IRoom> Rooms { get; }
-        public IList<IDoor> Doors { get; }
+        Passage Passage { get; }
+        Stage Stage { get; }
+        string? LevelNameEN { get; }
+        string? LevelNameJP { get; }
+        uint HardTimerSeconds { get; }
+        uint NormalTimerSeconds { get; }
+        uint SuperHardTimerSeconds { get; }
+        IList<IRoom> Rooms { get; }
+        IList<IDoor> Doors { get; }
     }
 }

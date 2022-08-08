@@ -10,6 +10,7 @@ namespace WL4EditorTests.Util
         private static string CompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Compressed";
         private static string DecompressedDataDirectory = $"{TestDataDirectory}\\Compression\\Decompressed";
 
+        #region Test Setup
         [TestInitialize]
         [Description("Tests must synchronize since Singleton is modified")]
         public void TestInit()
@@ -23,15 +24,17 @@ namespace WL4EditorTests.Util
             Mocks.MockRomDataProvider.Invocations.Clear();
             TestClassSynchronizationLock.ReleaseMutex();
         }
+        #endregion
 
+        #region Valid Tests
         [TestMethod]
         [Description("Test minimal valid cases for RLE decompression")]
-        [DataRow("01 03 AACCEE 00 01 03 BBDDFF 00", 0u, "AABB CCDD EEFF")] // data run (RLE8)
-        [DataRow("01 84 AA 00 01 84 BB 00", 0u, "AABB AABB AABB AABB")] // data repeat (RLE8)
-        [DataRow("00 0004 AACCEE88 0000 00 0004 BBDDFF99 0000", 0u, "AABB CCDD EEFF 8899")] // data run (RLE16)
-        [DataRow("00 8003 AA 0000 00 8003 BB 0000", 0u, "AABB AABB AABB")] // data repeat (RLE16)
-        [DataRow("00000000000000 01 03 AACCEE 00 01 03 BBDDFF 00", 7u, "AABB CCDD EEFF")] // starting from an offset
-        public void Test_RLEDecompress_Valid(string inputStr, uint offset, string expectedStr)
+        [DataRow("01 03 AACCEE 00 01 03 BBDDFF 00", 0, "AABB CCDD EEFF")] // data run (RLE8)
+        [DataRow("01 84 AA 00 01 84 BB 00", 0, "AABB AABB AABB AABB")] // data repeat (RLE8)
+        [DataRow("00 0004 AACCEE88 0000 00 0004 BBDDFF99 0000", 0, "AABB CCDD EEFF 8899")] // data run (RLE16)
+        [DataRow("00 8003 AA 0000 00 8003 BB 0000", 0, "AABB AABB AABB")] // data repeat (RLE16)
+        [DataRow("00000000000000 01 03 AACCEE 00 01 03 BBDDFF 00", 7, "AABB CCDD EEFF")] // starting from an offset
+        public void Test_RLEDecompress_Valid(string inputStr, int offset, string expectedStr)
         {
             var input = StringToByteArray(inputStr);
             var expected = StringToByteArray(expectedStr);
@@ -103,7 +106,9 @@ namespace WL4EditorTests.Util
                 CollectionAssert.AreEqual(inputData, actualData);
             }
         }
+        #endregion
 
+        #region Invalid Tests
         [TestMethod]
         [Description("Test cases in which RLE decompression throws IndexOutOfRangeException")]
         [DataRow("")] // immediately hit the end of data
@@ -126,5 +131,6 @@ namespace WL4EditorTests.Util
             Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(ImmutableArray.Create(input));
             Compression.RLEDecompress(0);
         }
+        #endregion
     }
 }

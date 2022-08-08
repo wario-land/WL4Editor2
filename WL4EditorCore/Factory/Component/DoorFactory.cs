@@ -5,7 +5,7 @@ namespace WL4EditorCore.Factory.Component
 {
     public class DoorFactory : IDoorFactory
     {
-        public IDoor CreateDoor(uint doorDataAddress)
+        public IDoor CreateDoor(int doorDataAddress)
         {
             throw new NotImplementedException();
         }

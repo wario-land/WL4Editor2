@@ -9,15 +9,23 @@ namespace WL4EditorTests.Factory.Component
     [TestClass]
     public class LevelFactoryTests : TestBase
     {
+        private static ImmutableArray<byte> testData;
+
+        #region Test Setup
+        [ClassInitialize]
+        public static void ClassInit(TestContext tc)
+        {
+            testData = ImmutableArray.Create(TestData.ConstructTestLevelData());
+        }
+
         [TestInitialize]
         [Description("Tests must synchronize since Singleton is modified")]
         public void TestInit()
         {
             TestClassSynchronizationLock.WaitOne();
-            var testData = ImmutableArray.Create(TestData.ConstructTestLevelData());
             Mocks.MockRomDataProvider.Setup(a => a.Data()).Returns(testData);
-            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<uint>())).Returns(new Mock<IRoom>().Object);
-            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<uint>())).Returns(new Mock<IDoor>().Object);
+            Mocks.MockRoomFactory.Setup(a => a.CreateRoom(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<uint>())).Returns(new Mock<IRoom>().Object);
+            Mocks.MockDoorFactory.Setup(a => a.CreateDoor(It.IsAny<int>())).Returns(new Mock<IDoor>().Object);
         }
 
         [TestCleanup]
@@ -28,7 +36,9 @@ namespace WL4EditorTests.Factory.Component
             Mocks.MockDoorFactory.Invocations.Clear();
             TestClassSynchronizationLock.ReleaseMutex();
         }
+        #endregion
 
+        #region Valid Tests
         [TestMethod]
         [Description("Test valid creation of a Level object")]
         [DataRow(Passage.EntryPassage, Stage.FirstLevel)]
@@ -39,5 +49,6 @@ namespace WL4EditorTests.Factory.Component
             Assert.AreEqual(passage, level.Passage);
             Assert.AreEqual(stage, level.Stage);
         }
+        #endregion
     }
 }

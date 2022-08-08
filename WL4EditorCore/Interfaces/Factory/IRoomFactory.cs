@@ -4,6 +4,6 @@ namespace WL4EditorCore.Interfaces.Factory
 {
     public interface IRoomFactory
     {
-        public IRoom CreateRoom(uint roomDataAddress);
+        IRoom CreateRoom(int roomDataAddress, int roomIndex, uint levelID);
     }
 }

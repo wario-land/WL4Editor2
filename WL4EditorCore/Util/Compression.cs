@@ -15,7 +15,7 @@ namespace WL4EditorCore.Util
         /// <param name="offset">The offset into data which marks the start of decompression.</param>
         /// <returns>The decompressed data as a byte array.</returns>
         /// <exception cref="DataException">If the end of data is reached while performing an RLE pass, or if the upper and lower portions do not match in size.</exception>
-        public static byte[] RLEDecompress(uint offset)
+        public static byte[] RLEDecompress(int offset)
         {
             List<byte> upper, lower;
 
@@ -46,22 +46,18 @@ namespace WL4EditorCore.Util
         }
 
         // Decompress a single pass of data. 2 passes must be interleaved to construct the output.
-        private static List<byte> RLEDecompressSinglePass(ref uint offset)
+        private static List<byte> RLEDecompressSinglePass(ref int offset)
         {
-            if (Singleton.Instance == null)
-            {
-                throw new InternalException("Singleton not initialized (WL4EditorCore.Util.RLEDecompressSinglePass)");
-            }
-            var data = Singleton.Instance.RomDataProvider.Data();
+            var data = Singleton.Instance?.RomDataProvider.Data() ?? throw new InternalException("Singleton not initialized (WL4EditorCore.Util.RLEDecompressSinglePass)"); ;
 
             List<byte> outputData = new();
-            uint runData;
-            var rle8 = data[(int)offset++] == 1;
+            int runData;
+            var rle8 = data[offset++] == 1;
             while (true)
             {
-                uint ctrl = rle8 ? data[(int)offset] : GBAUtils.GetShortValue(offset);
-                offset += rle8 ? 1u : 2;
-                uint ctrlMask = rle8 ? 0x80u : 0x8000;
+                int ctrl = rle8 ? data[offset] : GBAUtils.GetShortValue(offset);
+                offset += rle8 ? 1 : 2;
+                int ctrlMask = rle8 ? 0x80 : 0x8000;
                 if (ctrl == 0)
                 {
                     // End of data
@@ -73,7 +69,7 @@ namespace WL4EditorCore.Util
                     runData = ctrl & (ctrlMask - 1);
                     for (int j = 0; j < runData; j++)
                     {
-                        outputData.Add(data[(int)offset]);
+                        outputData.Add(data[offset]);
                     }
                     offset++;
                 }
@@ -83,7 +79,7 @@ namespace WL4EditorCore.Util
                     runData = ctrl;
                     for (int j = 0; j < runData; j++)
                     {
-                        outputData.Add(data[(int)offset + j]);
+                        outputData.Add(data[offset + j]);
                     }
                     offset += runData;
                 }
@@ -121,7 +117,7 @@ namespace WL4EditorCore.Util
             var R = new ushort[data.Length];
             var C = new ushort[data.Length];
             var jumpLimit = rle8 ? 0x7F : 0x7FFF;
-            ushort cons = (ushort)0;
+            ushort cons = 0;
             int minRun = rle8 ? 3 : 5;
 
             // Seed the dynamic programming jump table

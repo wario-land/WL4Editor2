@@ -7,7 +7,7 @@ namespace WL4EditorTests
         // Construct test ROM data that will load 2 levels
         public static byte[] ConstructTestLevelData()
         {
-            var data = new byte[RoomDataTable + 8];
+            var data = new byte[FreeSpaceStart];
 
             // Level (0, 0) - 1 room, 1 door
             var levelHeaderIndex1 = StringToByteArray("00000000");
@@ -59,7 +59,23 @@ namespace WL4EditorTests
         // Construct test ROM data that will load a room
         public static byte[] ConstructTestRoomData()
         {
-            throw new NotImplementedException();
+            var data = new byte[FreeSpaceStart];
+
+            // Room (0, 0, 0) - 1 room in level, no camera control
+            var roomHeader1 = StringToByteArray("02 10101020 000000 08598EEC 085991DC 08599454 085FA6D0 010107 00 085991D0 08599448 08599600 00FF 0100");
+            roomHeader1.CopyTo(data, 31);
+
+            // Room (1, 1, 1) - 2 rooms in level, camera control boxes in both rooms, 2 camera control boxes in 2nd room
+            var roomHeader2 = StringToByteArray("03 10102000 000000 08598FEC 085992DC 08599554 085FA7D0 03020E 00 085992D0 08599548 08599700 0111 0080");
+            roomHeader2.CopyTo(data, 1000);
+            var pointerToLevelCameraPointerTable = StringToByteArray("08000100");
+            pointerToLevelCameraPointerTable.CopyTo(data, CameraControlPointerTable + 4);
+            var cameraControlPointerTable = StringToByteArray("08000000 0800000B 083F9D58");
+            cameraControlPointerTable.CopyTo(data, 0x100);
+            var cameraControlData = StringToByteArray("0102 021011121314150506 031112131415160607");
+            cameraControlData.CopyTo(data, 0xB);
+
+            return data;
         }
     }
 }
