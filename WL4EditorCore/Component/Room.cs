@@ -90,7 +90,7 @@ namespace WL4EditorCore.Component
                         return;
                     }
                 }
-                throw new DataException($"Room has invalid camera data: Camera is of type \"HasControlAttributes\" but no camera controls found");
+                throw new DataException($"Room has invalid camera data: Camera is of type \"HasControlAttributes\", but no camera controls found which correspond to room {roomIndex}");
             }
         }
 

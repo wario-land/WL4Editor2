@@ -70,6 +70,12 @@ namespace WL4EditorTests
             }
 
             public int GetHashCode([DisallowNull] MethodInvocation obj) => 0;
+
+            public override string ToString()
+            {
+                var paramStr = string.Join(", ", Parameters);
+                return $"{Method}({paramStr})";
+            }
         }
 
         protected static byte[] StringToByteArray(string input)

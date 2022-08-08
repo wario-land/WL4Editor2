@@ -149,19 +149,20 @@ namespace WL4EditorTests.Component
                 new MethodInvocation("CreateRoom", 0, 0, 1u),
                 new MethodInvocation("CreateRoom", 44, 1, 1u),
                 new MethodInvocation("CreateRoom", 88, 2, 1u)
-            },
+            }
         };
 
         [TestMethod]
+        [Description("Test to make sure the correct invocations are made to construct member objects")]
         [DataRow(Passage.EntryPassage, Stage.FirstLevel, 0)]
         [DataRow(Passage.TopazPassage, Stage.ThirdLevel, 1)]
-        public void Test_CreateLevel_Valid_Callbacks(Passage passage, Stage stage, int callbackDataIndex)
+        public void Test_CreateLevel_Valid_Invocations(Passage passage, Stage stage, int callbackDataIndex)
         {
             _ = new Level(passage, stage);
             var expected = CallbackData[callbackDataIndex];
             var actual = this.Invocations;
             Assert.AreEqual(expected.Length, actual.Count);
-            Array.ForEach(expected, a => Assert.IsTrue(actual.Contains(a, a)));
+            Array.ForEach(expected, a => Assert.IsTrue(actual.Contains(a, a), $"Expected invocation \"{a}\" did not occur"));
         }
         #endregion
 
